@@ -149,6 +149,14 @@ TestCase subclass: #SentenceFinderByPrefixTest
 	poolDictionaries: ''
 	category: 'Stack-Exercise'!
 
+!SentenceFinderByPrefixTest methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 21:56:20'!
+test01EmptyStack
+	|sentenceStackToTest sentenceFinder expected|
+	sentenceStackToTest  := OOStack new.
+	sentenceFinder := SentenceFinderByPrefix new.
+	expected := OrderedCollection  new.
+	self assert: (sentenceFinder find: 'peperoni' inSentenceStack: sentenceStackToTest) equals: expected.! !
+
 
 !classDefinition: #OOStack category: #'Stack-Exercise'!
 Object subclass: #OOStack
@@ -214,6 +222,23 @@ Object subclass: #SentenceFinderByPrefix
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Stack-Exercise'!
+
+!SentenceFinderByPrefix methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 21:43:50'!
+add: aSentence to: aCollection IfPrefixedWith: aPrefix
+	(aSentence beginsWith: aPrefix) ifTrue:
+	[aCollection add: aSentence ].
+	! !
+
+!SentenceFinderByPrefix methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 21:48:23'!
+find: aPrefix inSentenceStack: aSentenceStack
+	|sentencesWithPrefix|
+	
+	sentencesWithPrefix  := OrderedCollection new.
+	[aSentenceStack isEmpty not] whileTrue: 
+		[
+			 self add: aSentenceStack  pop to: sentencesWithPrefix ifPrefixedWith: aPrefix.
+			].
+	^sentencesWithPrefix ! !
 
 
 !classDefinition: #StackState category: #'Stack-Exercise'!
