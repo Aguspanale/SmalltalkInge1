@@ -136,6 +136,21 @@ test10CanNotTopWhenThereAreNoObjectsInTheStack
 		
 ! !
 
+!OOStackTest methodsFor: 'test' stamp: 'ap 4/22/2024 23:57:43'!
+test11CanNotPushIntoFullStack
+
+	| stack  |
+	
+	stack := OOLimitedStack limitedTo: 3 .
+	((stack push: 'a') push: 'b') push: 'c'.	
+	self
+		should: [ stack push: 'd' ]
+		raise: Error - MessageNotUnderstood 
+		withExceptionDo: [ :anError |
+			self assert: anError messageText = OOLimitedStack stackFullErrorDescription ]
+		
+! !
+
 
 !OOStackTest methodsFor: 'failing' stamp: 'ap 4/18/2024 21:48:13'!
 signalFailure: aRenameMe1 
@@ -177,6 +192,10 @@ initialize
 isEmpty
 	^collection size = 0! !
 
+!OOStack methodsFor: 'accessing' stamp: 'ap 4/22/2024 23:51:49'!
+isFull
+	^false! !
+
 !OOStack methodsFor: 'accessing' stamp: 'ap 4/19/2024 12:38:57'!
 pop
 	self top.
@@ -190,9 +209,9 @@ push: anElement
 size
 	^collection size ! !
 
-!OOStack methodsFor: 'accessing' stamp: 'ap 4/19/2024 13:19:13'!
+!OOStack methodsFor: 'accessing' stamp: 'ap 4/22/2024 23:48:02'!
 top
-	^(StackState stateOf: self) top: self! !
+	^(StackState stateOf: self) top! !
 
 !OOStack methodsFor: 'accessing' stamp: 'ap 4/19/2024 13:03:30'!
 topEmpty
@@ -216,6 +235,49 @@ stackEmptyErrorDescription
 	^ 'stack is empty!!!!!!'! !
 
 
+!classDefinition: #OOLimitedStack category: #'Stack-Exercise'!
+OOStack subclass: #OOLimitedStack
+	instanceVariableNames: 'limit'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Stack-Exercise'!
+
+!OOLimitedStack methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:29:22'!
+initializeWith: aSizeLimit
+	limit := aSizeLimit.! !
+
+!OOLimitedStack methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:30:22'!
+isFull
+	^collection size = limit 	! !
+
+!OOLimitedStack methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:42:54'!
+push: anElement
+	(StackState stateOf: self) push: anElement.! !
+
+!OOLimitedStack methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:41:50'!
+pushFull: anElement
+	^self error: self class stackFullErrorDescription. ! !
+
+!OOLimitedStack methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:40:30'!
+pushNotFull: anElement
+	collection addFirst: anElement! !
+
+"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
+
+!classDefinition: 'OOLimitedStack class' category: #'Stack-Exercise'!
+OOLimitedStack class
+	instanceVariableNames: ''!
+
+!OOLimitedStack class methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:28:38'!
+limitedTo: sizeLimit
+	^self new initializeWith: sizeLimit.! !
+
+!OOLimitedStack class methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:41:06'!
+stackFullErrorDescription
+	
+	^ 'stack is full!!!!!!'! !
+
+
 !classDefinition: #SentenceFinderByPrefix category: #'Stack-Exercise'!
 Object subclass: #SentenceFinderByPrefix
 	instanceVariableNames: ''
@@ -229,9 +291,9 @@ add: aSentence to: aCollection IfPrefixedWith: aPrefix
 	[aCollection add: aSentence ].
 	! !
 
-!SentenceFinderByPrefix methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 21:48:23'!
+!SentenceFinderByPrefix methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:24:13'!
 find: aPrefix inSentenceStack: aSentenceStack
-	|sentencesWithPrefix|
+	|sentencesWithPrefix |
 	
 	sentencesWithPrefix  := OrderedCollection new.
 	[aSentenceStack isEmpty not] whileTrue: 
@@ -243,10 +305,14 @@ find: aPrefix inSentenceStack: aSentenceStack
 
 !classDefinition: #StackState category: #'Stack-Exercise'!
 Object subclass: #StackState
-	instanceVariableNames: ''
+	instanceVariableNames: 'representedStack'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Stack-Exercise'!
+
+!StackState methodsFor: 'nil' stamp: 'ap 4/22/2024 23:46:58'!
+initializeWith: theStackIRepresent
+	representedStack := theStackIRepresent .! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -259,9 +325,9 @@ represents: aStackToRepresent
 
 	self subclassResponsibility! !
 
-!StackState class methodsFor: 'as yet unclassified' stamp: 'ap 4/19/2024 13:20:39'!
+!StackState class methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:43:33'!
 stateOf: aStackToRepresent
-	^(self allSubclasses detect: [:aSubclass | aSubclass represents: aStackToRepresent]) new! !
+	^(self allSubclasses detect: [:aSubclass | aSubclass represents: aStackToRepresent]) new initializeWith: aStackToRepresent ! !
 
 
 !classDefinition: #StackEmptyState category: #'Stack-Exercise'!
@@ -271,9 +337,14 @@ StackState subclass: #StackEmptyState
 	poolDictionaries: ''
 	category: 'Stack-Exercise'!
 
-!StackEmptyState methodsFor: 'as yet unclassified' stamp: 'ap 4/19/2024 13:03:57'!
-top: theStackIRepresent
-	^theStackIRepresent topEmpty ! !
+!StackEmptyState methodsFor: 'nil' stamp: 'ap 4/22/2024 23:48:33'!
+top
+	^representedStack topEmpty ! !
+
+
+!StackEmptyState methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:49:17'!
+push: anElement
+	^representedStack pushNotFull: anElement. ! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -281,28 +352,59 @@ top: theStackIRepresent
 StackEmptyState class
 	instanceVariableNames: ''!
 
-!StackEmptyState class methodsFor: 'as yet unclassified' stamp: 'ap 4/19/2024 13:16:30'!
+!StackEmptyState class methodsFor: 'nil' stamp: 'ap 4/19/2024 13:16:30'!
 represents: aStackToRepresent
 	^aStackToRepresent isEmpty.! !
 
 
-!classDefinition: #StackNotEmptyState category: #'Stack-Exercise'!
-StackState subclass: #StackNotEmptyState
+!classDefinition: #StackFullState category: #'Stack-Exercise'!
+StackState subclass: #StackFullState
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Stack-Exercise'!
 
-!StackNotEmptyState methodsFor: 'as yet unclassified' stamp: 'ap 4/19/2024 13:04:16'!
-top: theStackIRepresent
-	^theStackIRepresent topNotEmpty ! !
+!StackFullState methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:49:37'!
+push: anElement
+	^representedStack pushFull: anElement. ! !
+
+!StackFullState methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:48:16'!
+top
+	^representedStack topNotEmpty ! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
-!classDefinition: 'StackNotEmptyState class' category: #'Stack-Exercise'!
-StackNotEmptyState class
+!classDefinition: 'StackFullState class' category: #'Stack-Exercise'!
+StackFullState class
 	instanceVariableNames: ''!
 
-!StackNotEmptyState class methodsFor: 'as yet unclassified' stamp: 'ap 4/19/2024 13:16:46'!
+!StackFullState class methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:38:37'!
 represents: aStackToRepresent
-	^aStackToRepresent isEmpty not.! !
+	^aStackToRepresent isFull.! !
+
+
+!classDefinition: #StackNotEmptyNorCloseState category: #'Stack-Exercise'!
+StackState subclass: #StackNotEmptyNorCloseState
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Stack-Exercise'!
+
+!StackNotEmptyNorCloseState methodsFor: 'nil' stamp: 'ap 4/22/2024 23:47:44'!
+top 
+	^representedStack topNotEmpty ! !
+
+
+!StackNotEmptyNorCloseState methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:49:28'!
+push: anElement
+	^representedStack pushNotFull: anElement. ! !
+
+"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
+
+!classDefinition: 'StackNotEmptyNorCloseState class' category: #'Stack-Exercise'!
+StackNotEmptyNorCloseState class
+	instanceVariableNames: ''!
+
+!StackNotEmptyNorCloseState class methodsFor: 'nil' stamp: 'ap 4/22/2024 23:51:18'!
+represents: aStackToRepresent
+	^aStackToRepresent isEmpty not and: aStackToRepresent isFull not.! !
