@@ -70,7 +70,7 @@ DenotativeObject subclass: #II
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
-!classDefinition: 'I2I class' category: #'EJ 4'!
+!classDefinition: 'II class' category: #'EJ 4'!
 II class
 	instanceVariableNames: 'previous'!
 
