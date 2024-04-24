@@ -159,18 +159,25 @@ signalFailure: aRenameMe1
 
 !classDefinition: #SentenceFinderByPrefixTest category: #'Stack-Exercise'!
 TestCase subclass: #SentenceFinderByPrefixTest
-	instanceVariableNames: ''
+	instanceVariableNames: 'sentenceFinder'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Stack-Exercise'!
 
-!SentenceFinderByPrefixTest methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 21:56:20'!
+!SentenceFinderByPrefixTest methodsFor: 'tests' stamp: 'ap 4/24/2024 13:59:08'!
 test01EmptyStack
-	|sentenceStackToTest sentenceFinder expected|
+	|sentenceStackToTest expected|
 	sentenceStackToTest  := OOStack new.
-	sentenceFinder := SentenceFinderByPrefix new.
+	
 	expected := OrderedCollection  new.
 	self assert: (sentenceFinder find: 'peperoni' inSentenceStack: sentenceStackToTest) equals: expected.! !
+
+
+!SentenceFinderByPrefixTest methodsFor: 'setUp' stamp: 'ap 4/24/2024 13:59:43'!
+setUp 
+	
+	sentenceFinder := SentenceFinderByPrefix new.! !
+
 
 
 !classDefinition: #OOStack category: #'Stack-Exercise'!
@@ -204,6 +211,10 @@ pop
 !OOStack methodsFor: 'accessing' stamp: 'ap 4/18/2024 21:18:00'!
 push: anElement
 	collection addFirst: anElement! !
+
+!OOStack methodsFor: 'accessing' stamp: 'ap 4/24/2024 13:19:23'!
+select: aBlockCondition
+	^collection  select: aBlockCondition.! !
 
 !OOStack methodsFor: 'accessing' stamp: 'ap 4/18/2024 21:26:50'!
 size
@@ -285,22 +296,46 @@ Object subclass: #SentenceFinderByPrefix
 	poolDictionaries: ''
 	category: 'Stack-Exercise'!
 
-!SentenceFinderByPrefix methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 21:43:50'!
-add: aSentence to: aCollection IfPrefixedWith: aPrefix
-	(aSentence beginsWith: aPrefix) ifTrue:
-	[aCollection add: aSentence ].
+!SentenceFinderByPrefix methodsFor: 'as yet unclassified' stamp: 'ap 4/24/2024 13:47:25'!
+add: anElement to: aCollection ifMeets: aCondition
+	(aCondition value: anElement) ifTrue: [aCollection add: anElement].
+				
+								
+		
+	
 	! !
 
-!SentenceFinderByPrefix methodsFor: 'as yet unclassified' stamp: 'ap 4/22/2024 23:24:13'!
+!SentenceFinderByPrefix methodsFor: 'as yet unclassified' stamp: 'ap 4/24/2024 13:25:08'!
 find: aPrefix inSentenceStack: aSentenceStack
-	|sentencesWithPrefix |
+	|sentencesWithPrefix|
 	
-	sentencesWithPrefix  := OrderedCollection new.
-	[aSentenceStack isEmpty not] whileTrue: 
-		[
-			 self add: aSentenceStack  pop to: sentencesWithPrefix ifPrefixedWith: aPrefix.
+	sentencesWithPrefix := self selectFrom: aSentenceStack  elementsMeeting: [:aSentence | aSentence beginsWith: aPrefix].
+	
+	^sentencesWithPrefix 
+	
+	! !
+
+!SentenceFinderByPrefix methodsFor: 'as yet unclassified' stamp: 'ap 4/24/2024 13:52:11'!
+selectFrom: aStack  elementsMeeting: aBlockCondition
+	aStack isEmpty 
+		ifTrue: [^OrderedCollection new]
+		ifFalse:[
+			|anElement elementsMeetingCondition|
+			
+			anElement := aStack pop.
+			
+			elementsMeetingCondition := self add: anElement to: (self selectFrom: aStack elementsMeeting: aBlockCondition) ifMeets: aBlockCondition.
+			
+			aStack push: anElement.
+			
+			^elementsMeetingCondition 
 			].
-	^sentencesWithPrefix ! !
+			
+			
+							
+	
+	
+	! !
 
 
 !classDefinition: #StackState category: #'Stack-Exercise'!
