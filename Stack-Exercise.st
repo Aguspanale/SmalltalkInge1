@@ -164,20 +164,67 @@ TestCase subclass: #SentenceFinderByPrefixTest
 	poolDictionaries: ''
 	category: 'Stack-Exercise'!
 
-!SentenceFinderByPrefixTest methodsFor: 'tests' stamp: 'ap 4/24/2024 13:59:08'!
-test01EmptyStack
-	|sentenceStackToTest expected|
+!SentenceFinderByPrefixTest methodsFor: 'tests' stamp: 'ap 4/24/2024 14:17:14'!
+test01EmptyStackShouldReturnEmptyList
+	|sentenceStackToTest expect|
 	sentenceStackToTest  := OOStack new.
+	expect := OrderedCollection  new.
 	
-	expected := OrderedCollection  new.
-	self assert: (sentenceFinder find: 'peperoni' inSentenceStack: sentenceStackToTest) equals: expected.! !
+	self assert: (sentenceFinder find: 'peperoni' inSentenceStack: sentenceStackToTest) equals: expect.! !
+
+!SentenceFinderByPrefixTest methodsFor: 'tests' stamp: 'ap 4/24/2024 14:12:29'!
+test02ShouldReturnEmptyListIfNoElementHasPrefix
+	|sentenceStackToTest expect|
+	sentenceStackToTest  := (OOStack new push: 'pizza') push: 'margherita'.
+	expect := OrderedCollection  new.
+	
+	self assert: (sentenceFinder find: 'peperoni' inSentenceStack: sentenceStackToTest) equals: expect.! !
+
+!SentenceFinderByPrefixTest methodsFor: 'tests' stamp: 'ap 4/24/2024 14:26:07'!
+test03ShouldReturnElementWithṔrefix
+	|sentenceStackToTest expect|
+	sentenceStackToTest  := (OOStack new push: 'peperoni pizza') push: 'margherita'.
+	expect := OrderedCollection  new.
+	expect add: 'peperoni pizza'.
+	self assert: (sentenceFinder find: 'peperoni' inSentenceStack: sentenceStackToTest) equals: expect.! !
+
+!SentenceFinderByPrefixTest methodsFor: 'tests' stamp: 'ap 4/24/2024 14:31:09'!
+test04ShouldReturnMultipleElementsWithṔrefix
+	|sentenceStackToTest expect|
+	sentenceStackToTest  := (((OOStack new push: 'peperoni pizza') push: 'margherita') push: 'peperoni' ) push: 'peperonccino'.
+	expect := OrderedCollection  new.
+	expect add: 'peperoni pizza'.
+	expect add: 'peperoni'.
+	expect add: 'peperonccino'.
+	
+	self assert: (sentenceFinder find: 'peper' inSentenceStack: sentenceStackToTest) sort equals: expect sort.! !
+
+!SentenceFinderByPrefixTest methodsFor: 'tests' stamp: 'ap 4/24/2024 14:32:38'!
+test05ShouldNotReturnUnmatchedCasingElements
+	|sentenceStackToTest expect|
+	sentenceStackToTest  := (((OOStack new push: 'Peperoni pizza') push: 'margherita') push: 'peperoni' ) push: 'peperonccino'.
+	expect := OrderedCollection  new.
+	expect add: 'peperoni'.
+	expect add: 'peperonccino'.
+	
+	self assert: (sentenceFinder find: 'peper' inSentenceStack: sentenceStackToTest) sort equals: expect sort.! !
+
+!SentenceFinderByPrefixTest methodsFor: 'tests' stamp: 'ap 4/24/2024 14:40:35'!
+test05StackIsPreservedAfterFindingElements
+	|sentenceStackToTest expect |
+	sentenceStackToTest  := (((OOStack new push: 'Peperoni pizza') push: 'margherita') push: 'peperoni' ) push: 'peperonccino'.
+	expect := (((OOStack new push: 'Peperoni pizza') push: 'margherita') push: 'peperoni' ) push: 'peperonccino'.
+
+	(sentenceFinder find: 'peper' inSentenceStack: sentenceStackToTest).
+	
+	self assert: sentenceStackToTest size equals: expect size.
+	self assert: sentenceStackToTest top equals: expect top.! !
 
 
 !SentenceFinderByPrefixTest methodsFor: 'setUp' stamp: 'ap 4/24/2024 13:59:43'!
 setUp 
 	
 	sentenceFinder := SentenceFinderByPrefix new.! !
-
 
 
 !classDefinition: #OOStack category: #'Stack-Exercise'!
@@ -296,9 +343,10 @@ Object subclass: #SentenceFinderByPrefix
 	poolDictionaries: ''
 	category: 'Stack-Exercise'!
 
-!SentenceFinderByPrefix methodsFor: 'as yet unclassified' stamp: 'ap 4/24/2024 13:47:25'!
+!SentenceFinderByPrefix methodsFor: 'as yet unclassified' stamp: 'ap 4/24/2024 14:15:10'!
 add: anElement to: aCollection ifMeets: aCondition
 	(aCondition value: anElement) ifTrue: [aCollection add: anElement].
+	^aCollection 
 				
 								
 		
