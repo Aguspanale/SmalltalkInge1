@@ -88,7 +88,7 @@ test07AccountKnowsItsTransactions
 	self assert: (account1 transactions includes: deposit1).
 ! !
 
-!ReceptiveAccountTest methodsFor: 'tests' stamp: 'AP 5/16/2024 10:17:35'!
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/16/2024 21:09:03'!
 test08PortfolioCalculatesBalanceWIthOneAccount
 
 	| account1 portfolio1 |
@@ -99,12 +99,12 @@ test08PortfolioCalculatesBalanceWIthOneAccount
 	
 	portfolio1:= Portfolio new. 
 	
-	portfolio1 addAccount: account1.
+	portfolio1 add: account1.
 		
 	self assert: (portfolio1 balance = 50).
 ! !
 
-!ReceptiveAccountTest methodsFor: 'tests' stamp: 'AP 5/16/2024 10:14:23'!
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/16/2024 21:09:15'!
 test09PortfolioCalculatesBalanceWIthTwoAccounts
 
 	| account1 account2 portfolio1 |
@@ -116,13 +116,13 @@ test09PortfolioCalculatesBalanceWIthTwoAccounts
 	
 	portfolio1:= Portfolio new. 
 	
-	portfolio1 addAccount: account1.
-	portfolio1 addAccount: account2.
+	portfolio1 add: account1.
+	portfolio1 add: account2.
 		
 	self assert: (portfolio1 balance = 110).
 ! !
 
-!ReceptiveAccountTest methodsFor: 'tests' stamp: 'AP 5/16/2024 10:23:34'!
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/16/2024 21:09:33'!
 test10PortfolioCalculatesBalanceWIthPortfolio
 
 	| account1 portfolio1 portfolio2|
@@ -134,14 +134,14 @@ test10PortfolioCalculatesBalanceWIthPortfolio
 	portfolio1:= Portfolio new. 
 	portfolio2 := Portfolio  new.
 	
-	portfolio1 addAccount: account1.
+	portfolio1 add: account1.
 	
-	portfolio2 addPortfolio: portfolio1.
+	portfolio2 add: portfolio1.
 		
 	self assert: (portfolio2 balance = 50).
 ! !
 
-!ReceptiveAccountTest methodsFor: 'tests' stamp: 'AP 5/16/2024 11:14:35'!
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/16/2024 21:09:41'!
 test11CannotAddSameAccountTwice
 
 	| account1 portfolio1|
@@ -153,15 +153,15 @@ test11CannotAddSameAccountTwice
 	portfolio1:= Portfolio new. 
 
 	
-	portfolio1 addAccount: account1.
+	portfolio1 add: account1.
 	
-	self should: [portfolio1 addAccount: account1]
+	self should: [portfolio1 add: account1]
 	raise: Error - MessageNotUnderstood 
 	withMessageText: 'Cannot add account twice'
 	
 ! !
 
-!ReceptiveAccountTest methodsFor: 'tests' stamp: 'AP 5/16/2024 11:21:30'!
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/16/2024 21:09:53'!
 test12CannotAddPortfolioWithAlreadyAddedAccount
 
 	| account1 portfolio1 portfolio2|
@@ -173,16 +173,16 @@ test12CannotAddPortfolioWithAlreadyAddedAccount
 	portfolio1:= Portfolio new. 
 	portfolio2:= Portfolio new. 
 
-	portfolio2 addAccount: account1.	
-	portfolio1 addAccount: account1.
+	portfolio2 add: account1.	
+	portfolio1 add: account1.
 	
-	self should: [portfolio2 addPortfolio: portfolio1]
+	self should: [portfolio2 add: portfolio1]
 	raise: Error - MessageNotUnderstood 
 	withMessageText: 'Cannot add account twice'
 	
 ! !
 
-!ReceptiveAccountTest methodsFor: 'tests' stamp: 'AP 5/16/2024 11:53:06'!
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/16/2024 21:10:09'!
 test13CannotAddAccountThatIsInSubPortfolios
 
 	| account1 portfolio1 portfolio2|
@@ -194,13 +194,215 @@ test13CannotAddAccountThatIsInSubPortfolios
 	portfolio1:= Portfolio new. 
 	portfolio2:= Portfolio new. 
 
-	portfolio2 addAccount: account1.	
-	portfolio1 addPortfolio: portfolio2. 
+	portfolio2 add: account1.	
+	portfolio1 add: portfolio2. 
 	
-	self should: [portfolio1 addAccount: account1]
+	self should: [portfolio1 add: account1]
 	raise: Error - MessageNotUnderstood 
 	withMessageText: 'Cannot add account twice'
 	
+! !
+
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/16/2024 21:30:22'!
+test14CannotAddPortfolioWithRepeatedAccountsInTheSuperPortfolio
+
+	| account1 portfolio1 portfolio2|
+	
+	account1 := ReceptiveAccount new.
+	
+	Deposit register: 50 on: account1.
+	
+	portfolio1:= Portfolio new. 
+	portfolio2:= Portfolio new. 
+	
+	portfolio1 add: portfolio2. 
+	portfolio1 add: account1.
+	
+	self should: [portfolio2 add: account1]
+	raise: Error - MessageNotUnderstood 
+	withMessageText: 'Cannot add account twice'
+	
+! !
+
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/16/2024 21:34:37'!
+test15hasRegisteredReturnsTrueWhenItShould
+
+	| account1 portfolio1 aDeposit|
+	
+	account1 := ReceptiveAccount new.
+	
+	aDeposit := Deposit register: 50 on: account1.
+	
+	portfolio1:= Portfolio new. 
+	
+	portfolio1 add: account1.
+		
+	self assert: (portfolio1 hasRegistered: aDeposit).
+! !
+
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/16/2024 21:40:02'!
+test16canAskForAllTransactions
+
+	| account1 portfolio1 aDepositCollection|
+	
+	account1 := ReceptiveAccount new.
+	aDepositCollection := OrderedCollection new.
+	aDepositCollection add:( Deposit register: 50 on: account1).
+	aDepositCollection add:( Deposit register: 50 on: account1).
+	aDepositCollection add:( Deposit register: 50 on: account1).
+	
+	portfolio1:= Portfolio new. 
+	
+	portfolio1 add: account1.
+		
+	self assert: (portfolio1 transactions = aDepositCollection).
+! !
+
+
+!classDefinition: #Account category: #'Portfolio-Ejercicio'!
+Object subclass: #Account
+	instanceVariableNames: 'parentAccounts'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Portfolio-Ejercicio'!
+
+!Account methodsFor: 'init' stamp: 'ap 5/16/2024 21:14:48'!
+addParent: aPortfolio
+	parentAccounts add: aPortfolio! !
+
+!Account methodsFor: 'init' stamp: 'ap 5/16/2024 21:25:58'!
+allReceptiveAccountsBelow
+
+	self subclassResponsibility! !
+
+!Account methodsFor: 'init' stamp: 'ap 5/16/2024 21:25:35'!
+allReceptiveAccountsConnected
+	parentAccounts isEmpty ifTrue: [^self allReceptiveAccountsBelow].
+	^self superParents inject: OrderedCollection new into: [:allAccounts :aSuperParent | allAccounts addAll: aSuperParent allReceptiveAccountsConnected; yourself].
+	
+	
+	! !
+
+!Account methodsFor: 'init' stamp: 'ap 5/16/2024 21:12:21'!
+balance
+
+	self subclassResponsibility! !
+
+!Account methodsFor: 'init' stamp: 'ap 5/16/2024 21:26:10'!
+superParents
+	parentAccounts isEmpty ifTrue: [^OrderedCollection with: self].
+	^parentAccounts inject: OrderedCollection new into: [:accumulatedParents :currentParent| accumulatedParents addAll: currentParent superParents; yourself].
+	! !
+
+
+!Account methodsFor: 'testing' stamp: 'ap 5/16/2024 21:31:45'!
+hasRegistered: aTransaction
+
+	self subclassResponsibility! !
+
+
+!Account methodsFor: 'transactions' stamp: 'ap 5/16/2024 21:37:26'!
+transactions
+
+	self subclassResponsibility! !
+
+
+!classDefinition: #Portfolio category: #'Portfolio-Ejercicio'!
+Account subclass: #Portfolio
+	instanceVariableNames: 'Accounts'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Portfolio-Ejercicio'!
+
+!Portfolio methodsFor: 'init' stamp: 'ap 5/16/2024 21:19:19'!
+allReceptiveAccountsBelow
+	^ Accounts inject: OrderedCollection new into: [:accumulatedAccounts :currentPortfolio |
+			accumulatedAccounts addAll: currentPortfolio allReceptiveAccountsBelow;yourself.
+		]! !
+
+!Portfolio methodsFor: 'init' stamp: 'ap 5/16/2024 21:20:21'!
+balance
+	^Accounts sum: [:account | account balance].! !
+
+!Portfolio methodsFor: 'init' stamp: 'ap 5/16/2024 21:33:28'!
+hasRegistered: aTransaction
+
+	^Accounts anySatisfy: [:anAccount | anAccount hasRegistered: aTransaction]! !
+
+!Portfolio methodsFor: 'init' stamp: 'ap 5/16/2024 21:21:21'!
+initialize
+	Accounts := OrderedCollection  new.
+	parentAccounts := OrderedCollection  new.
+	! !
+
+!Portfolio methodsFor: 'init' stamp: 'ap 5/16/2024 21:39:32'!
+transactions
+
+	^Accounts inject: OrderedCollection new into: [:aTransactionCollection :currentAccount | aTransactionCollection addAll: currentAccount transactions; yourself].! !
+
+
+!Portfolio methodsFor: 'events-registering' stamp: 'ap 5/16/2024 21:17:41'!
+add: aPortfolio
+	|allAccountsInAPortfolio|
+	allAccountsInAPortfolio := aPortfolio allReceptiveAccountsConnected.
+	self allReceptiveAccountsConnected do:
+		[:anAccount |
+			(allAccountsInAPortfolio includes: anAccount) ifTrue:[self error: self class cannotAddAccountTwiceErrorDescription]
+			].
+	Accounts add: aPortfolio.
+	aPortfolio addParent: self.! !
+
+"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
+
+!classDefinition: 'Portfolio class' category: #'Portfolio-Ejercicio'!
+Portfolio class
+	instanceVariableNames: ''!
+
+!Portfolio class methodsFor: 'as yet unclassified' stamp: 'AP 5/16/2024 11:18:46'!
+cannotAddAccountTwiceErrorDescription
+	^'Cannot add account twice'! !
+
+
+!classDefinition: #ReceptiveAccount category: #'Portfolio-Ejercicio'!
+Account subclass: #ReceptiveAccount
+	instanceVariableNames: 'transactions'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Portfolio-Ejercicio'!
+
+!ReceptiveAccount methodsFor: 'initialization' stamp: 'ap 5/16/2024 21:21:45'!
+initialize
+
+	transactions := OrderedCollection new.
+	parentAccounts := OrderedCollection  new.! !
+
+
+!ReceptiveAccount methodsFor: 'transactions' stamp: 'HernanWilkinson 7/13/2011 18:37'!
+register: aTransaction
+
+	transactions add: aTransaction 
+! !
+
+!ReceptiveAccount methodsFor: 'transactions' stamp: 'HernanWilkinson 7/13/2011 18:37'!
+transactions 
+
+	^ transactions copy! !
+
+
+!ReceptiveAccount methodsFor: 'balance' stamp: 'AP 5/16/2024 10:03:36'!
+balance
+
+	^transactions inject: 0 into: [:currentBalance : currentTransaction | currentTransaction executeOver: currentBalance ]! !
+
+
+!ReceptiveAccount methodsFor: 'testing' stamp: 'ap 5/16/2024 21:18:40'!
+allReceptiveAccountsBelow
+	^OrderedCollection with: self.! !
+
+!ReceptiveAccount methodsFor: 'testing' stamp: 'NR 10/17/2019 03:28:43'!
+hasRegistered: aTransaction
+
+	^ transactions includes: aTransaction 
 ! !
 
 
@@ -303,91 +505,3 @@ Withdraw class
 for: aValue
 
 	^ self new initializeFor: aValue ! !
-
-
-!classDefinition: #Portfolio category: #'Portfolio-Ejercicio'!
-Object subclass: #Portfolio
-	instanceVariableNames: 'account accounts portfolios'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Portfolio-Ejercicio'!
-
-!Portfolio methodsFor: 'init' stamp: 'AP 5/16/2024 11:53:43'!
-addAccount: anAccount
-	(self allAccounts includes: anAccount) ifTrue: [self error: self class cannotAddAccountTwiceErrorDescription]. 
-	accounts add: anAccount.
-	! !
-
-!Portfolio methodsFor: 'init' stamp: 'AP 5/16/2024 11:41:57'!
-allAccounts
-	|anAllAccounts|
-	anAllAccounts := accounts.
-	portfolios do: [:aPortFolio| anAllAccounts := anAllAccounts addAll: aPortFolio allAccounts; yourself].
-	^anAllAccounts ! !
-
-!Portfolio methodsFor: 'init' stamp: 'AP 5/16/2024 10:23:56'!
-balance
-	^(accounts sum: [:anAccount| anAccount balance] ifEmpty: 0) + (portfolios sum: [:aPortFolio | aPortFolio balance] ifEmpty: 0).! !
-
-!Portfolio methodsFor: 'init' stamp: 'AP 5/16/2024 10:21:17'!
-initialize
-	accounts := OrderedCollection  new.
-	portfolios  := OrderedCollection  new.! !
-
-
-!Portfolio methodsFor: 'events-registering' stamp: 'AP 5/16/2024 11:34:34'!
-addPortfolio: aPortfolio
-	self allAccounts do:
-		[:anAccount |
-			(aPortfolio allAccounts includes: anAccount) ifTrue:[self error: self class cannotAddAccountTwiceErrorDescription]
-			].
-	portfolios add: aPortfolio.! !
-
-"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
-
-!classDefinition: 'Portfolio class' category: #'Portfolio-Ejercicio'!
-Portfolio class
-	instanceVariableNames: ''!
-
-
-!Portfolio class methodsFor: 'as yet unclassified' stamp: 'AP 5/16/2024 11:18:46'!
-cannotAddAccountTwiceErrorDescription
-	^'Cannot add account twice'! !
-
-
-!classDefinition: #ReceptiveAccount category: #'Portfolio-Ejercicio'!
-Object subclass: #ReceptiveAccount
-	instanceVariableNames: 'transactions'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Portfolio-Ejercicio'!
-
-!ReceptiveAccount methodsFor: 'initialization' stamp: 'NR 10/17/2019 15:06:56'!
-initialize
-
-	transactions := OrderedCollection new.! !
-
-
-!ReceptiveAccount methodsFor: 'transactions' stamp: 'HernanWilkinson 7/13/2011 18:37'!
-register: aTransaction
-
-	transactions add: aTransaction 
-! !
-
-!ReceptiveAccount methodsFor: 'transactions' stamp: 'HernanWilkinson 7/13/2011 18:37'!
-transactions 
-
-	^ transactions copy! !
-
-
-!ReceptiveAccount methodsFor: 'balance' stamp: 'AP 5/16/2024 10:03:36'!
-balance
-
-	^transactions inject: 0 into: [:currentBalance : currentTransaction | currentTransaction executeOver: currentBalance ]! !
-
-
-!ReceptiveAccount methodsFor: 'testing' stamp: 'NR 10/17/2019 03:28:43'!
-hasRegistered: aTransaction
-
-	^ transactions includes: aTransaction 
-! !
