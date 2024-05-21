@@ -364,7 +364,7 @@ test11TransferLegsKnowFather
 	
 ! !
 
-!ReceptiveAccountTest methodsFor: 'tests' stamp: 'AP 5/20/2024 21:16:42'!
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/21/2024 13:58:48'!
 test12AccountSummarySummarizesDeposit
 
 	| account1 |
@@ -373,12 +373,12 @@ test12AccountSummarySummarizesDeposit
 	
 	Deposit register: 100 on: account1 .
 		
-	self assert: account1 accountSummary includes: 'Depósito por 100'.
+	self assert: (AccountSummaryMaker summarizeWith: account1) includes: 'Depósito por 100'.
 	
 	
 ! !
 
-!ReceptiveAccountTest methodsFor: 'tests' stamp: 'AP 5/20/2024 21:11:37'!
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/21/2024 13:58:52'!
 test13AccountSummarySummarizesWithdrawal
 
 	| account1 |
@@ -387,12 +387,12 @@ test13AccountSummarySummarizesWithdrawal
 	
 	Withdraw register: 100 on: account1 .
 		
-	self assert: account1 accountSummary includes: 'Extracción por 100'.
+	self assert: (AccountSummaryMaker summarizeWith: account1) includes: 'Extracción por 100'.
 	
 	
 ! !
 
-!ReceptiveAccountTest methodsFor: 'tests' stamp: 'AP 5/20/2024 21:20:03'!
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/21/2024 13:58:58'!
 test14AccountSummarySummarizesMultipleDeposits
 
 	| account1 |
@@ -402,13 +402,13 @@ test14AccountSummarySummarizesMultipleDeposits
 	Deposit register: 100 on: account1 .
 	Deposit register: 120 on: account1 .
 		
-	self assert: account1 accountSummary includes: 'Depósito por 100'.
-	self assert: account1 accountSummary includes: 'Depósito por 120'.
+	self assert: (AccountSummaryMaker summarizeWith: account1) includes: 'Depósito por 100'.
+	self assert: (AccountSummaryMaker summarizeWith: account1) includes: 'Depósito por 120'.
 	
 	
 ! !
 
-!ReceptiveAccountTest methodsFor: 'tests' stamp: 'AP 5/20/2024 21:21:34'!
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/21/2024 13:59:05'!
 test15AccountSummarySummarizesTransfer
 
 	| account1 account2 |
@@ -418,13 +418,13 @@ test15AccountSummarySummarizesTransfer
 	
 	Transfer amount: 100 from: account1 to: account2.
 		
-	self assert: account1 accountSummary includes: 'Salida por transferencia de 100'.
-	self assert: account2 accountSummary includes: 'Entrada por transferencia de 100'.
+	self assert: (AccountSummaryMaker summarizeWith: account1) includes: 'Salida por transferencia de 100'.
+	self assert: (AccountSummaryMaker summarizeWith: account2) includes: 'Entrada por transferencia de 100'.
 	
 	
 ! !
 
-!ReceptiveAccountTest methodsFor: 'tests' stamp: 'AP 5/20/2024 21:23:26'!
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/21/2024 13:59:08'!
 test16AccountSummarySummarizesBalance
 
 	| account1 account2 |
@@ -434,7 +434,39 @@ test16AccountSummarySummarizesBalance
 	
 	Transfer amount: 100 from: account1 to: account2.
 		
-	self assert: account1 accountSummary includes: 'Balance -100'.
+	self assert: (AccountSummaryMaker summarizeWith: account1) includes: 'Balance -100'.
+	
+	
+! !
+
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/21/2024 14:00:08'!
+test17TransferNetAddsReceptions
+
+	| account1 account2 |
+	
+	account1 := ReceptiveAccount new.
+	account2 := ReceptiveAccount new.
+	
+	Transfer amount: 100 from: account1 to: account2.
+		
+	self assert: ((TransferNetSummaryMaker summarizeWith: account1) = -100 and: account2 transferNet = 100)
+	
+	
+! !
+
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'ap 5/21/2024 14:00:22'!
+test18TransferNetDoesNotCountDepositsOrWithdrawals
+
+	| account1 account2 |
+	
+	account1 := ReceptiveAccount new.
+	account2 := ReceptiveAccount new.
+	
+	Transfer amount: 100 from: account1 to: account2.
+	Deposit register: 10 on: account1. 
+	Withdraw register: 10 on: account2. 
+		
+	self assert: ((TransferNetSummaryMaker summarizeWith: account1) = -100 and: account2 transferNet = 100)
 	
 	
 ! !
@@ -676,15 +708,35 @@ addedTo: aPortfolio
 	! !
 
 
-!ReceptiveAccount methodsFor: 'inspecting' stamp: 'AP 5/20/2024 21:28:17'!
+!ReceptiveAccount methodsFor: 'inspecting' stamp: 'ap 5/21/2024 13:25:37'!
 accountSummary
 	|summary|
 	
 	summary := transactions inject: OrderedCollection new into: [:currentSummary :currentTransaction |
-		currentTransaction registerOnSummary: currentSummary
+		(currentTransaction isKindOf: Deposit) ifTrue:[currentSummary add: 'Depósito por ',currentTransaction value asString.].
+		(currentTransaction isKindOf: Withdraw) ifTrue:[currentSummary add: 'Extracción por ',currentTransaction value asString.].
+		(currentTransaction isKindOf: CashDispatch) ifTrue:[currentSummary add: 'Salida por transferencia de ',currentTransaction value asString.].
+		(currentTransaction isKindOf: CashReception) ifTrue:[currentSummary add: 'Entrada por transferencia de ',currentTransaction value asString.].
+		currentSummary
 		].
 	summary add: 'Balance ',self balance asString.
 	^summary ! !
+
+!ReceptiveAccount methodsFor: 'inspecting' stamp: 'ap 5/21/2024 13:48:13'!
+summarizeWith: aSummarizer
+	^aSummarizer summarizeWithTransactionsAndBalance value:transactions value: self balance.! !
+
+!ReceptiveAccount methodsFor: 'inspecting' stamp: 'ap 5/21/2024 13:34:39'!
+transferNet
+	
+	
+	^transactions sum: [:aTransaction | 
+		|aValue|
+		aValue := 0.
+		(aTransaction isKindOf: CashDispatch) ifTrue:[aValue := aValue - aTransaction value].
+		(aTransaction isKindOf: CashReception) ifTrue:[aValue := aValue + aTransaction value].
+		aValue
+		].! !
 
 
 !classDefinition: #AccountTransaction category: #'Portfolio-Solucion'!
@@ -704,11 +756,6 @@ value
 affectBalance: aBalance
 
 	self subclassResponsibility ! !
-
-!AccountTransaction methodsFor: 'balance' stamp: 'AP 5/20/2024 21:26:27'!
-registerOnSummary: aSummary
-
-	self subclassResponsibility! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -751,11 +798,6 @@ affectBalance: aBalance
 
 	^aBalance + value ! !
 
-!Deposit methodsFor: 'balance' stamp: 'AP 5/20/2024 21:31:03'!
-registerOnSummary: aSummary
-	aSummary add: 'Depósito por ',value asString.
-	^aSummary ! !
-
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
 !classDefinition: 'Deposit class' category: #'Portfolio-Solucion'!
@@ -790,10 +832,6 @@ value
 	^ self transfer value! !
 
 
-!TransferLeg methodsFor: 'balance' stamp: 'AP 5/20/2024 21:26:27'!
-registerOnSummary: aSummary
-	self subclassResponsibility ! !
-
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
 !classDefinition: 'TransferLeg class' category: #'Portfolio-Solucion'!
@@ -821,11 +859,6 @@ affectBalance: aBalance
 
 	^aBalance - self value.! !
 
-!CashDispatch methodsFor: 'as yet unclassified' stamp: 'AP 5/20/2024 21:33:07'!
-registerOnSummary: aSummary
-	aSummary add: 'Salida por transferencia de ',self value asString.
-	^aSummary ! !
-
 
 !classDefinition: #CashReception category: #'Portfolio-Solucion'!
 TransferLeg subclass: #CashReception
@@ -838,11 +871,6 @@ TransferLeg subclass: #CashReception
 affectBalance: aBalance
 
 	^aBalance + self value ! !
-
-!CashReception methodsFor: 'as yet unclassified' stamp: 'AP 5/20/2024 21:33:15'!
-registerOnSummary: aSummary
-	aSummary add: 'Entrada por transferencia de ',self value asString.
-	^aSummary ! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -885,11 +913,6 @@ affectBalance: aBalance
 
 	^aBalance - value! !
 
-!Withdraw methodsFor: 'balance' stamp: 'AP 5/20/2024 21:31:24'!
-registerOnSummary: aSummary
-	aSummary add: 'Extracción por ',value asString.
-	^aSummary ! !
-
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
 !classDefinition: 'Withdraw class' category: #'Portfolio-Solucion'!
@@ -900,6 +923,77 @@ Withdraw class
 for: aValue
 
 	^ self new initializeFor: aValue ! !
+
+
+!classDefinition: #Summarizer category: #'Portfolio-Solucion'!
+Object subclass: #Summarizer
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Portfolio-Solucion'!
+
+!Summarizer methodsFor: 'as yet unclassified' stamp: 'ap 5/21/2024 13:44:02'!
+accountSummary: anAccount
+	^anAccount summarizeWith: self.
+	
+
+	! !
+
+!Summarizer methodsFor: 'as yet unclassified' stamp: 'ap 5/21/2024 13:57:04'!
+summarizeWithTransactionsAndBalance
+
+	self subclassResponsibility! !
+
+"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
+
+!classDefinition: 'Summarizer class' category: #'Portfolio-Solucion'!
+Summarizer class
+	instanceVariableNames: ''!
+
+!Summarizer class methodsFor: 'as yet unclassified' stamp: 'ap 5/21/2024 13:50:30'!
+summarizeWith: anAccount
+	^self new accountSummary: anAccount.! !
+
+
+!classDefinition: #AccountSummaryMaker category: #'Portfolio-Solucion'!
+Summarizer subclass: #AccountSummaryMaker
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Portfolio-Solucion'!
+
+!AccountSummaryMaker methodsFor: 'as yet unclassified' stamp: 'ap 5/21/2024 13:56:59'!
+summarizeWithTransactionsAndBalance
+	
+	^[:transactions :balance | |summary|
+		summary := transactions inject: OrderedCollection new into: [:currentSummary :currentTransaction |
+		(currentTransaction isKindOf: Deposit) ifTrue:[currentSummary add: 'Depósito por ',currentTransaction value asString.].
+		(currentTransaction isKindOf: Withdraw) ifTrue:[currentSummary add: 'Extracción por ',currentTransaction value asString.].
+		(currentTransaction isKindOf: CashDispatch) ifTrue:[currentSummary add: 'Salida por transferencia de ',currentTransaction value asString.].
+		(currentTransaction isKindOf: CashReception) ifTrue:[currentSummary add: 'Entrada por transferencia de ',currentTransaction value asString.].
+		currentSummary
+		].
+	summary add: 'Balance ',balance asString.
+	summary]! !
+
+
+!classDefinition: #TransferNetSummaryMaker category: #'Portfolio-Solucion'!
+Summarizer subclass: #TransferNetSummaryMaker
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Portfolio-Solucion'!
+
+!TransferNetSummaryMaker methodsFor: 'as yet unclassified' stamp: 'ap 5/21/2024 13:58:19'!
+summarizeWithTransactionsAndBalance
+
+	^[:transactions :balance | transactions sum: [:aTransaction | 
+		|aValue|
+		aValue := 0.
+		(aTransaction isKindOf: CashDispatch) ifTrue:[aValue := aValue - aTransaction value].
+		(aTransaction isKindOf: CashReception) ifTrue:[aValue := aValue + aTransaction value].
+		aValue
+		].].! !
 
 
 !classDefinition: #Transfer category: #'Portfolio-Solucion'!
